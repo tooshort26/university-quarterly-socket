@@ -16,14 +16,14 @@ app.use(express.json());
 // Config Socket.io realtime APIs
 let socket = app.configure(socketio(function(io) {
   io.on('connection', function(socket) {
-  	socket.on('con', function (data) {
-      socket.broadcast.emit(`server_qr_attendance_${data.subject_id}_${data.instructor_id_number}`, data);
+  	socket.on('upload_new_form', function (data) {
+      socket.broadcast.emit(`publish_unified_form`, data);
     });
   });
 }));
 
 // Enable REST service
-smbasapp.configure(express.rest());
+app.configure(express.rest());
 
 // New connections connect to stream channel
 app.on('connection', conn => app.channel('stream').join(conn));
@@ -31,6 +31,13 @@ app.on('connection', conn => app.channel('stream').join(conn));
 app.publish(data => app.channel('stream'));
 
 
+app.post('/upload/form', (req, res) => {
+	socket.io.emit(`publish_unified_form`, req.body);
+	return res.status(200).json({
+        code : 200,
+        status : 'success'
+   });
+});
 
 
 app.listen(PORT).on('listening', _ => console.log(`Realtime server running on port ${PORT}`) );
